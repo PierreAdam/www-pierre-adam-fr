@@ -29,7 +29,7 @@ const Games = (() => {
   }
 
   /* ---------- snake ---------- */
-  function snake(el, T) {
+  function snake(el, T, signal) {
     return new Promise((resolve) => {
       const W = 22, H = 16;
       let body, dir, queue, food, score, speed, over, paused, timer;
@@ -99,11 +99,19 @@ const Games = (() => {
         ArrowRight: { x: 1, y: 0 }, d: { x: 1, y: 0 },
       };
       const stop = keys((k) => {
-        if (k === "Escape") { clearTimeout(timer); stop(); saveBest("snake", score); return resolve(score); }
+        if (k === "Escape") return quit();
         if (over) { if (k === "r" || k === "Enter") reset(); return; }
         if (k === "p") { paused = !paused; draw(); if (!paused) schedule(); return; }
         if (DIRS[k] && queue.length < 3) queue.push(DIRS[k]);
       });
+      // Esc, or the console being closed while playing
+      const quit = () => {
+        clearTimeout(timer);
+        stop();
+        saveBest("snake", score);
+        resolve(score);
+      };
+      signal?.addEventListener("abort", quit, { once: true });
       reset();
     });
   }
@@ -121,7 +129,7 @@ const Games = (() => {
   const COLORS = { I: "#22d3ee", O: "#facc15", T: "#c084fc", S: "#4ade80", Z: "#f87171", J: "#60a5fa", L: "#fb923c" };
   const rotate = (m) => m[0].map((_, i) => m.map((r) => r[i]).reverse());
 
-  function tetris(el, T) {
+  function tetris(el, T, signal) {
     return new Promise((resolve) => {
       const W = 10, H = 20;
       let board, piece, nextKey, bag, score, lines, level, over, paused, timer;
@@ -218,7 +226,7 @@ const Games = (() => {
       };
 
       const stop = keys((k) => {
-        if (k === "Escape") { clearTimeout(timer); stop(); saveBest("tetris", score); return resolve(score); }
+        if (k === "Escape") return quit();
         if (over) { if (k === "r" || k === "Enter") reset(); return; }
         if (k === "p") { paused = !paused; draw(); schedule(); return; }
         if (paused) return;
@@ -230,6 +238,14 @@ const Games = (() => {
         else return;
         draw();
       });
+      // Esc, or the console being closed while playing
+      const quit = () => {
+        clearTimeout(timer);
+        stop();
+        saveBest("tetris", score);
+        resolve(score);
+      };
+      signal?.addEventListener("abort", quit, { once: true });
       reset();
     });
   }

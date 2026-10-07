@@ -417,13 +417,16 @@ function consoleEgg() {
   };
 
   /* --- games: full-size screen over the terminal, back to the prompt on Esc --- */
+  let gameAbort = null; // set while a game runs, so closing the console can end it
   const play = async (name) => {
     const wasMax = box.classList.contains("maximized");
     box.classList.add("maximized");
     const screen = document.createElement("pre");
     screen.className = "game";
     box.append(screen);
-    const score = await Games[name](screen, t().games);
+    gameAbort = new AbortController();
+    const score = await Games[name](screen, t().games, gameAbort.signal);
+    gameAbort = null;
     screen.remove();
     if (!wasMax) box.classList.remove("maximized");
     return t().games.result(name, score, Games.best(name));
@@ -485,7 +488,7 @@ function consoleEgg() {
 
   const toggle = (show = box.classList.contains("hidden")) => {
     box.classList.toggle("hidden", !show);
-    if (!show) input.blur();
+    if (!show) { input.blur(); gameAbort?.abort(); }
     if (show) { if (!out.textContent) print(t().welcome); input.focus(); }
   };
   box.querySelector(".win-close").onclick = () => toggle(false);
@@ -543,7 +546,7 @@ function consoleEgg() {
       input.disabled = true;
       res = await res;
       input.disabled = false;
-      input.focus();
+      if (!box.classList.contains("hidden")) input.focus();
     }
     if (res) print(res);
     scroll();
