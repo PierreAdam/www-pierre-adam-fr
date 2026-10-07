@@ -3,8 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pierre Adam</title>
-  <meta name="description" content="Pierre Adam, CTO and payment systems engineer based in Strasbourg." />
+  <title>Pierre Adam | CTO, payment systems</title>
+  <meta name="description" content="Pierre Adam, CTO based in Strasbourg. I build payment and ordering systems that keep working when the network doesn't." />
+  <link rel="canonical" href="https://www.pierre-adam.fr/" />
+  <meta name="theme-color" content="#0a0e14" />
+
+  <!-- Link previews (LinkedIn, Slack, WhatsApp, X...) -->
+  <meta property="og:type" content="profile" />
+  <meta property="og:site_name" content="Pierre Adam" />
+  <meta property="og:title" content="Pierre Adam | CTO, payment systems" />
+  <meta property="og:description" content="I build payment and ordering systems that keep working when the network doesn't." />
+  <meta property="og:url" content="https://www.pierre-adam.fr/" />
+  <meta property="og:image" content="https://www.pierre-adam.fr/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Pierre Adam, CTO and payment systems engineer" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="fr_FR" />
+  <meta property="profile:first_name" content="Pierre" />
+  <meta property="profile:last_name" content="Adam" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="favicon-180.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,7 +43,8 @@
 
   <header class="nav">
     <a href="#top" class="logo">&gt;_ <span id="logo-name"></span></a>
-    <nav>
+    <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <nav id="menu">
       <a href="#about" data-i18n="nav.about"></a>
       <a href="#experience" data-i18n="nav.experience"></a>
       <a href="#skills" data-i18n="nav.skills"></a>
@@ -39,7 +61,9 @@
       <p class="mono accent">$ whoami</p>
       <h1 id="name"></h1>
       <h2 class="typed mono"><span id="role"></span><span class="caret">█</span></h2>
+      <p id="print-role" class="print-only"></p>
       <p id="pitch" class="muted"></p>
+      <p id="print-meta" class="print-only"></p>
       <div class="cta">
         <a href="#projects" class="btn" data-i18n="viewProjects"></a>
         <a id="pdf" href="#" class="btn ghost" data-i18n="download"></a>
@@ -89,6 +113,7 @@
   </div>
 
   <script src="data.js"></script>
+  <script src="games.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

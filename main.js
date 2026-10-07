@@ -55,7 +55,7 @@ function render() {
     .join("");
 
   $("#projects-grid").innerHTML = c.projects
-    .map((p) => `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener"><h4>${esc(p.name)}</h4><p>${esc(d().projectText[p.name])}</p>${chips(p.tags)}</a>`)
+    .map((p) => `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener"><h4>${esc(p.name)}</h4><p>${esc(d().projectText[p.name])}</p><p class="print-only card-url">${esc(p.url.replace(/^https?:\/\//, ""))}</p>${chips(p.tags)}</a>`)
     .join("");
   tilt();
 
@@ -64,6 +64,42 @@ function render() {
     .join("");
 
   $("#links").innerHTML = c.links.map((l) => `<a class="btn ghost" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+
+  // Only visible when printing: static title and a contact line under the name
+  $("#print-role").textContent = d().roles[0];
+  const short = (u) => u.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  $("#print-meta").textContent = [c.location, "www.pierre-adam.fr", ...c.links.map((l) => short(l.url))].join("  |  ");
+}
+
+/* ---------- neofetch (shared by the intro and the console) ---------- */
+function neofetchHTML() {
+  const first = d().experience[d().experience.length - 1].period.slice(0, 4);
+  const years = new Date().getFullYear() - Number(first);
+  const skills = Object.values(d().skills).flat();
+  const logo = [
+    "        .--.",
+    "       |o_o |",
+    "       |:_/ |",
+    "      //   \\ \\",
+    "     (|     | )",
+    "    /'\\_   _/`\\",
+    "    \\___)=(___/",
+  ].join("\n");
+  const info = [
+    ["OS", "CV Linux x86_64 (Strasbourg)"],
+    ["Host", d().experience[0].company],
+    ["Kernel", d().roles[0]],
+    ["Uptime", t().uptime(years)],
+    ["Packages", `${skills.length} (${skills.filter((s) => ["Java", "Scala", "Python", "TypeScript"].includes(s)).join(", ")})`],
+    ["Shell", "bash 5.2"],
+    ["Locale", lang === "fr" ? "fr_FR.UTF-8" : "en_US.UTF-8"],
+    ["Terminal", "pierreadam.js"],
+  ];
+  const colors = ["#2e3436", "#cc0000", "#4e9a06", "#c4a000", "#3465a4", "#75507b", "#06989a", "#d3d7cf"]
+    .map((c) => `<span class="neo-color" style="background:${c}"></span>`).join("");
+  return `<div class="neofetch"><pre class="neo-logo">${esc(logo)}</pre><div>
+    <b class="neo-key">guest</b>@<b class="neo-key">pierreadam</b><br>----------------<br>
+    ${info.map(([k, v]) => `<b class="neo-key">${k}</b>: ${esc(v)}`).join("<br>")}<br><br>${colors}</div></div>`;
 }
 
 /* ---------- terminal intro ---------- */
@@ -124,21 +160,31 @@ function intro() {
     // 2. the shell window opens
     boot.remove();
     term.classList.remove("off");
-    await sleep(400);
+    const add = (html) => {
+      const el = document.createElement("div");
+      el.innerHTML = html;
+      out.append(el);
+      out.scrollTop = out.scrollHeight;
+      return el;
+    };
+    // neofetch runs on its own when the shell starts, like from a .bashrc
+    await sleep(300);
+    add(neofetchHTML());
+    await sleep(1200);
 
     for (const l of lines) {
       if (stopped) return;
       if (l.cmd) {
-        out.textContent += "guest@pierreadam:~$ ";
+        const typed = document.createTextNode("");
+        add(`<span class="prompt"><b>guest@pierreadam</b>:<i>~</i>$</span> `).append(typed);
         for (const ch of l.cmd) {
           if (stopped) return;
-          out.textContent += ch;
+          typed.data += ch;
           await sleep(45 + Math.random() * 60);
         }
-        out.textContent += "\n";
         await sleep(250);
       } else {
-        out.textContent += l.out + "\n";
+        add(esc(l.out));
         await sleep(400);
       }
     }
@@ -257,37 +303,7 @@ function consoleEgg() {
 
   const history = [];
 
-  /* --- neofetch --- */
-  const neofetch = () => {
-    const first = d().experience[d().experience.length - 1].period.slice(0, 4);
-    const years = new Date().getFullYear() - Number(first);
-    const skills = Object.values(d().skills).flat();
-    const logo = [
-      "        .--.",
-      "       |o_o |",
-      "       |:_/ |",
-      "      //   \\ \\",
-      "     (|     | )",
-      "    /'\\_   _/`\\",
-      "    \\___)=(___/",
-    ].join("\n");
-    const info = [
-      ["OS", "CV Linux x86_64 (Strasbourg)"],
-      ["Host", d().experience[0].company],
-      ["Kernel", d().roles[0]],
-      ["Uptime", t().uptime(years)],
-      ["Packages", `${skills.length} (${skills.filter((s) => ["Java", "Scala", "Python", "TypeScript"].includes(s)).join(", ")})`],
-      ["Shell", "bash 5.2"],
-      ["Locale", lang === "fr" ? "fr_FR.UTF-8" : "en_US.UTF-8"],
-      ["Terminal", "pierreadam.js"],
-    ];
-    const colors = ["#2e3436", "#cc0000", "#4e9a06", "#c4a000", "#3465a4", "#75507b", "#06989a", "#d3d7cf"]
-      .map((c) => `<span class="neo-color" style="background:${c}"></span>`).join("");
-    printHTML(`<div class="neofetch"><pre class="neo-logo">${esc(logo)}</pre><div>
-      <b class="neo-key">guest</b>@<b class="neo-key">pierreadam</b><br>----------------<br>
-      ${info.map(([k, v]) => `<b class="neo-key">${k}</b>: ${esc(v)}`).join("<br>")}<br><br>${colors}</div></div>`);
-    return null;
-  };
+  const neofetch = () => (printHTML(neofetchHTML()), null);
 
   /* --- pay: fake card terminal --- */
   const dots = async (text, ms = 900) => {
@@ -400,6 +416,19 @@ function consoleEgg() {
     return null;
   };
 
+  /* --- games: full-size screen over the terminal, back to the prompt on Esc --- */
+  const play = async (name) => {
+    const wasMax = box.classList.contains("maximized");
+    box.classList.add("maximized");
+    const screen = document.createElement("pre");
+    screen.className = "game";
+    box.append(screen);
+    const score = await Games[name](screen, t().games);
+    screen.remove();
+    if (!wasMax) box.classList.remove("maximized");
+    return t().games.result(name, score, Games.best(name));
+  };
+
   const cmds = {
     help: () => {
       const names = Object.keys(t().cmds);
@@ -416,6 +445,8 @@ function consoleEgg() {
     pay,
     matrix,
     hack,
+    snake: () => play("snake"),
+    tetris: () => play("tetris"),
     pwd: () => "/home/guest",
     date: () => new Date().toLocaleString(lang, { dateStyle: "full", timeStyle: "medium" }),
     uname: (args) => (args.includes("-a") ? "Linux pierreadam 6.12.0-cv #1 SMP PREEMPT x86_64 GNU/Linux" : "Linux"),
@@ -512,6 +543,16 @@ function consoleEgg() {
 }
 
 $$("[data-lang]").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+
+/* ---------- phone menu ---------- */
+const nav = $(".nav");
+const setMenu = (open) => {
+  nav.classList.toggle("open", open);
+  $(".nav-toggle").setAttribute("aria-expanded", open);
+};
+$(".nav-toggle").addEventListener("click", () => setMenu(!nav.classList.contains("open")));
+$$("#menu a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+document.addEventListener("click", (e) => !nav.contains(e.target) && setMenu(false));
 
 render();
 intro();

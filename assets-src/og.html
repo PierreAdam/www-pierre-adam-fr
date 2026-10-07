@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- Source of og-image.png (1200x630 link preview). Regenerate with assets-src/build-og.sh -->
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1200px; height: 630px; overflow: hidden; background: #0a0e14; font-family: "Segoe UI", system-ui, sans-serif; color: #d6deeb; position: relative; }
+  canvas { position: absolute; inset: 0; }
+  .term { position: absolute; left: 90px; top: 95px; width: 1020px; height: 440px; background: #1e1e1e; border-radius: 12px 12px 6px 6px; box-shadow: 0 30px 80px rgba(0,0,0,.7); overflow: hidden; }
+  .bar { height: 52px; background: #2b2b2b; display: flex; align-items: center; justify-content: flex-end; padding: 0 18px; gap: 12px; position: relative; }
+  .bar em { position: absolute; left: 0; right: 0; text-align: center; font-style: normal; font-weight: bold; font-size: 20px; color: #ddd; }
+  .bar span { width: 26px; height: 26px; border-radius: 50%; background: #3d3d3d; }
+  .bar span:last-child { background: #e95420; }
+  .body { padding: 34px 44px; font-family: Consolas, monospace; font-size: 26px; line-height: 1.5; }
+  .p b { color: #8ae234; } .p i { color: #729fcf; font-style: normal; }
+  h1 { font-family: "Segoe UI", sans-serif; font-size: 84px; color: #fff; margin: 14px 0 4px; letter-spacing: -1px; }
+  .role { color: #56b6f7; font-size: 34px; }
+  .pitch { color: #7f8ea3; font-size: 25px; margin-top: 18px; font-family: "Segoe UI", sans-serif; }
+  .caret { color: #3ddc97; }
+</style>
+</head>
+<body>
+  <canvas id="c" width="1200" height="630"></canvas>
+  <div class="term">
+    <div class="bar"><em>guest@pierreadam: ~</em><span></span><span></span><span></span></div>
+    <div class="body">
+      <div class="p"><b>guest@pierreadam</b>:<i>~</i>$ whoami</div>
+      <h1>Pierre Adam</h1>
+      <div class="role">CTO · payment systems engineer<span class="caret">█</span></div>
+      <div class="pitch">Payment and ordering systems that keep working when the network doesn't.</div>
+    </div>
+  </div>
+  <script>
+    // same node-graph background as the site, frozen
+    const ctx = document.getElementById("c").getContext("2d");
+    let s = 7;
+    const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+    const n = Array.from({ length: 70 }, () => ({ x: rnd() * 1200, y: rnd() * 630 }));
+    for (const a of n) for (const b of n) {
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < 140) { ctx.strokeStyle = `rgba(86,182,247,${(1 - d / 140) * 0.3})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    }
+    ctx.fillStyle = "#3ddc97";
+    for (const p of n) ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+  </script>
+</body>
+</html>

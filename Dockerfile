@@ -2,7 +2,7 @@
 FROM nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html style.css main.js data.js /usr/share/nginx/html/
+COPY index.html style.css main.js data.js games.js favicon.svg favicon-180.png og-image.png /usr/share/nginx/html/
 
 EXPOSE 80
 

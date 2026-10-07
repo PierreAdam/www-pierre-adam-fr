@@ -4,3 +4,4 @@ Dockerfile
 docker-compose*.yml
 *.tmp
 deploy.sh
+assets-src
