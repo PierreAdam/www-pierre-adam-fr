@@ -67,6 +67,12 @@
     .lynx .ly-sel { background: #55ffff; color: #000; }
     .lynx .ly-status { color: #fff; }
     .lynx .ly-help { color: #55ff55; }
+    .sl { overflow: hidden; }
+    .sl-train { position: absolute; left: 0; top: 0; margin: 0; line-height: 1.15; color: var(--fg); will-change: transform; }
+    .sl-puff { position: absolute; color: var(--muted); white-space: pre; pointer-events: none; animation: sl-puff 1.8s ease-out forwards; }
+    .sl-toot { color: var(--accent); font-weight: bold; animation: sl-toot 2s steps(1) forwards; }
+    @keyframes sl-toot { 0% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+    @keyframes sl-puff { to { transform: translate(2.5em, -5em) scale(1.8); opacity: 0; } }
     @media print { .bsod { display: none !important; } }
   </style>`);
 
@@ -112,38 +118,73 @@
   ];
   const TRAIN = LOCO.map((l, i) => l + WAGON(" PIERRE  ADAM ")[i] + WAGON("   HIRE  ME   ")[i]);
   const WHEELS = ["(|)", "(/)", "(-)", "(\\)"];
+  // true: the train jumps one character at a time, like a real terminal; false: smooth glide
+  const SL_CHOPPY = true;
 
   registerCommand("sl", {
     hidden: true,
     run: (args, api) => api.fullscreen((el, signal) => new Promise((resolve) => {
-      const { cols, rows } = measure(el);
-      const width = TRAIN[0].length;
-      const top = Math.max(4, Math.floor((rows - TRAIN.length) / 2) + 1);
-      const smoke = [];
-      let x = cols;
-      let frame = 0;
-      const timer = setInterval(() => {
-        if (signal?.aborted || x < -width) { clearInterval(timer); return resolve(null); }
-        const grid = Array.from({ length: rows }, () => Array(cols).fill(" "));
-        const put = (r, c, s) => [...s].forEach((ch, i) => {
-          if (ch !== " " && r >= 0 && r < rows && c + i >= 0 && c + i < cols) grid[r][c + i] = ch;
-        });
-        // smoke: new puff from the chimney, older ones rise, drift back and fade
-        if (frame % 3 === 0) smoke.push({ x: x + 3, y: top - 1, age: 0 });
-        for (const p of smoke) {
-          p.age++;
-          if (p.age % 2 === 0) p.y--;
-          p.x += 1;
-          put(p.y, p.x, ["(@@)", "(@)", "( )", "()", "."][Math.min(4, Math.floor(p.age / 4))]);
+      // the train pulls into the "station" in the middle, stops so it can be read, then leaves
+      el.textContent = "";
+      el.classList.add("sl");
+      const train = document.createElement("pre");
+      train.className = "sl-train";
+      el.append(train);
+      const draw = (wheel) => (train.textContent = TRAIN.map((l) => l.replaceAll("@@@", wheel)).join("\n"));
+      draw(WHEELS[0]);
+
+      // size: about a third of the screen height, and the whole train fits when it stops
+      const W = el.clientWidth, H = el.clientHeight;
+      train.style.fontSize = "10px";
+      const box = train.getBoundingClientRect();
+      const scale = Math.min((H * 0.34) / box.height, (W * 0.95) / box.width);
+      train.style.fontSize = `${10 * scale}px`;
+      const tw = box.width * scale, th = box.height * scale;
+      const charW = tw / TRAIN[0].length, charH = th / TRAIN.length;
+      const y = (H - th) / 2 + charH;
+      const chimney = 4 * charW; // column of the chimney in the art
+
+      const speed = 18 * charW; // px per second: 18 characters a second
+      const station = Math.round((W - tw) / 2 / charW) * charW; // train centred
+      const STOP_MS = 2000;
+      let x = W, last = performance.now(), lastWheel = 0, lastPuff = 0, wheel = 0, stoppedAt = 0;
+      const puff = () => {
+        const p = document.createElement("span");
+        p.className = "sl-puff";
+        p.textContent = ["(@@)", "( @ )", "(  )"][Math.floor(Math.random() * 3)];
+        p.style.cssText = `left:${(SL_CHOPPY ? Math.round(x / charW) * charW : x) + chimney}px;top:${y - charH * 1.2}px;font-size:${10 * scale}px`;
+        if (SL_CHOPPY) p.style.animationTimingFunction = "steps(7)";
+        p.addEventListener("animationend", () => p.remove());
+        el.append(p);
+      };
+      const toot = () => {
+        const b = document.createElement("span");
+        b.className = "sl-puff sl-toot";
+        b.textContent = api.lang === "fr" ? "TUT TUUUT !" : "TOOT TOOT!";
+        b.style.cssText = `left:${x + chimney - charW}px;top:${y - charH * 2.6}px;font-size:${10 * scale}px`;
+        b.addEventListener("animationend", () => b.remove());
+        el.append(b);
+      };
+      const step = (now) => {
+        if (signal?.aborted || x < -tw) { el.classList.remove("sl"); return resolve(null); }
+        const dt = now - last;
+        last = now;
+        const atStation = stoppedAt && now - stoppedAt < STOP_MS;
+        if (!atStation) x -= (speed * dt) / 1000;
+        if (!stoppedAt && x <= station) {
+          // arrived: stand still for a moment, with a whistle
+          x = station;
+          stoppedAt = now;
+          toot();
         }
-        while (smoke.length && smoke[0].y < 0) smoke.shift();
-        const wheel = WHEELS[frame % WHEELS.length];
-        TRAIN.forEach((line, i) => put(top + i, x, line.replaceAll("@@@", wheel)));
-        el.textContent = grid.map((r) => r.join("")).join("\n");
-        x--;
-        frame++;
-      }, 40);
-    })),
+        if (!atStation && now - lastWheel > 120) { draw(WHEELS[++wheel % WHEELS.length]); lastWheel = now; }
+        if (now - lastPuff > (atStation ? 450 : 220)) { puff(); lastPuff = now; }
+        const shownX = SL_CHOPPY ? Math.round(x / charW) * charW : x;
+        train.style.transform = `translate(${shownX}px, ${y}px)`;
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }), "game"),
   });
 
   /* ---------- cowsay ---------- */
