@@ -1,0 +1,8 @@
+# Pierre Adam website (www.pierre-adam.fr / www.pierre-adam.eu)
+# Copy of /srv/docker/config/pierre-adam-website/docker-compose.yml on the server.
+services:
+  server:
+    image: registry.jackson42.com/dontpanic57/pierre-adam-website:latest
+    restart: always
+    ports:
+      - 127.0.0.1:10100:80

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pierre Adam</title>
+  <meta name="description" content="Pierre Adam, CTO and payment systems engineer based in Strasbourg." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Terminal intro -->
+  <div id="intro" aria-hidden="true">
+    <pre id="boot"></pre>
+    <div class="term off">
+      <div class="term-bar"><em>guest@pierreadam: ~</em><div class="win-btns"><button class="win-min" aria-label="Minimize"><svg viewBox="0 0 10 10"><path d="M2 5h6"/></svg></button><button class="win-max" aria-label="Maximize"><svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6"/></svg></button><button class="win-close" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg></button></div></div>
+      <pre id="intro-text"></pre>
+    </div>
+    <button id="skip" data-i18n="skip"></button>
+  </div>
+
+  <canvas id="bg"></canvas>
+
+  <header class="nav">
+    <a href="#top" class="logo">&gt;_ <span id="logo-name"></span></a>
+    <nav>
+      <a href="#about" data-i18n="nav.about"></a>
+      <a href="#experience" data-i18n="nav.experience"></a>
+      <a href="#skills" data-i18n="nav.skills"></a>
+      <a href="#projects" data-i18n="nav.projects"></a>
+      <a href="#contact" data-i18n="nav.contact"></a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button data-lang="en">EN</button><span>/</span><button data-lang="fr">FR</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="mono accent">$ whoami</p>
+      <h1 id="name"></h1>
+      <h2 class="typed mono"><span id="role"></span><span class="caret">█</span></h2>
+      <p id="pitch" class="muted"></p>
+      <div class="cta">
+        <a href="#projects" class="btn" data-i18n="viewProjects"></a>
+        <a id="pdf" href="#" class="btn ghost" data-i18n="download"></a>
+      </div>
+      <p class="hint mono muted" data-i18n-html="hint"></p>
+    </section>
+
+    <section id="about" class="reveal">
+      <h3><span class="accent">01.</span> <span data-i18n="sections.about"></span></h3>
+      <div id="about-text" class="about"></div>
+    </section>
+
+    <section id="experience" class="reveal">
+      <h3><span class="accent">02.</span> <span data-i18n="sections.experience"></span></h3>
+      <ol id="timeline" class="timeline"></ol>
+    </section>
+
+    <section id="skills" class="reveal">
+      <h3><span class="accent">03.</span> <span data-i18n="sections.skills"></span></h3>
+      <div id="skills-grid" class="skills"></div>
+    </section>
+
+    <section id="projects" class="reveal">
+      <h3><span class="accent">04.</span> <span data-i18n="sections.projects"></span></h3>
+      <div id="projects-grid" class="cards"></div>
+    </section>
+
+    <section id="education" class="reveal">
+      <h3><span class="accent">05.</span> <span data-i18n="sections.education"></span></h3>
+      <ul id="edu" class="edu"></ul>
+    </section>
+
+    <section id="contact" class="reveal">
+      <h3><span class="accent">06.</span> <span data-i18n="sections.contact"></span></h3>
+      <p class="muted" data-i18n="contactText"></p>
+      <div id="links" class="cta"></div>
+    </section>
+  </main>
+
+  <footer class="mono muted" data-i18n="footer"></footer>
+
+  <!-- Easter-egg terminal -->
+  <div id="console" class="term hidden">
+    <div class="term-bar"><em>guest@pierreadam: ~</em><div class="win-btns"><button class="win-min" aria-label="Minimize"><svg viewBox="0 0 10 10"><path d="M2 5h6"/></svg></button><button class="win-max" aria-label="Maximize"><svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6"/></svg></button><button class="win-close" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg></button></div></div>
+    <div id="console-out"></div>
+    <div class="console-line"><span class="prompt"><b>guest@pierreadam</b>:<i>~</i>$</span><input id="console-in" autocomplete="off" spellcheck="false" /></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

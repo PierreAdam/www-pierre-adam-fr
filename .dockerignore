@@ -1,0 +1,6 @@
+.claude
+REQUIREMENTS.md
+Dockerfile
+docker-compose*.yml
+*.tmp
+deploy.sh
