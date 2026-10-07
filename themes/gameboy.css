@@ -1,0 +1,28 @@
+/* Theme: original Game Boy (DMG), the famous 4 shades of green */
+@media screen {
+  html[data-theme="gameboy"] {
+    --bg: #9bbc0f;
+    --bg2: #8bac0f;
+    --fg: #0f380f;
+    --muted: #306230;
+    --accent: #0f380f;
+    --accent2: #306230;
+    --border: #306230;
+    --sans: var(--mono);
+  }
+  html[data-theme="gameboy"] .hero h1 { color: var(--fg); letter-spacing: .02em; }
+  html[data-theme="gameboy"] .btn:hover { box-shadow: 4px 4px 0 var(--muted); }
+  html[data-theme="gameboy"] .card,
+  html[data-theme="gameboy"] .chip,
+  html[data-theme="gameboy"] .btn,
+  html[data-theme="gameboy"] .term { border-radius: 0; }
+  html[data-theme="gameboy"] .card { border-width: 2px; }
+  html[data-theme="gameboy"] .timeline > li::before { border-radius: 0; box-shadow: none; }
+  /* LCD dot grid */
+  html[data-theme="gameboy"] body::before {
+    content: ""; position: fixed; inset: 0; z-index: 250; pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 3px, rgba(15, 56, 15, .07) 3px 4px),
+      repeating-linear-gradient(to right, transparent 0 3px, rgba(15, 56, 15, .07) 3px 4px);
+  }
+}

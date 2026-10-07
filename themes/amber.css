@@ -1,0 +1,20 @@
+/* Theme: amber monochrome monitor (IBM 5151 style) */
+@media screen {
+  html[data-theme="amber"] {
+    --bg: #0d0800;
+    --bg2: #160e00;
+    --fg: #ffb000;
+    --muted: #c08400;
+    --accent: #ffcc40;
+    --accent2: #ff9900;
+    --border: #4a3200;
+    --sans: var(--mono);
+  }
+  html[data-theme="amber"] body { text-shadow: 0 0 6px rgba(255, 170, 0, .45); }
+  html[data-theme="amber"] .hero h1 { color: var(--accent); }
+  /* faint scanlines */
+  html[data-theme="amber"] body::before {
+    content: ""; position: fixed; inset: 0; z-index: 250; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .25) 2px 3px);
+  }
+}

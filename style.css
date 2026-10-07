@@ -160,16 +160,57 @@ footer { text-align: center; padding: 4rem 1rem 2rem; font-size: .8rem; }
 .nav.open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
 /* Konami code: retro green-phosphor CRT mode */
-html.crt { filter: grayscale(1) sepia(1) hue-rotate(65deg) saturate(3.5) brightness(.95) contrast(1.1); }
+.crt-defs { position: absolute; width: 0; height: 0; }
+/* pixelate + jitter (SVG filter), then green phosphor tint */
+/* the green phosphor look applies when no theme is active; themes/common.css handles CRT on top of a theme */
+html.crt:not([data-theme]) :is(.nav, main, footer, #bg, #console) { filter: url(#crt) grayscale(1) sepia(1) hue-rotate(65deg) saturate(3.5) brightness(1.05) contrast(1.15); }
+html.crt:not([data-theme]) body { text-shadow: 0 0 4px rgba(120,255,140,.55); }
+/* low resolution: bigger everything on desktop */
+@media (min-width: 900px) {
+  html.crt { zoom: 1.4; }
+  /* keep the background canvas at screen size (it is drawn in screen pixels) */
+  html.crt #bg { zoom: calc(1 / 1.4); }
+}
+/* the pixel filter keeps the brightest colour of each block, so dark text on a bright
+   background disappears: use bright-on-dark buttons instead, like an old terminal */
+html.crt:not([data-theme]) .btn { background: transparent; color: var(--accent); border-width: 2px; }
+/* console: a sharper monitor (no pixelation), darker glass and brighter glowing text */
+html.crt:not([data-theme]) #console { filter: url(#crt-soft) grayscale(1) sepia(1) hue-rotate(65deg) saturate(3) brightness(1.2) contrast(1.15); background: #050805; }
+html.crt:not([data-theme]) #console-out, html.crt:not([data-theme]) #console-in { color: #f2fff2; text-shadow: 0 0 2px rgba(150,255,160,.9), 0 0 8px rgba(120,255,140,.35); }
+html.crt:not([data-theme]) #console .term-bar { background: #0d140d; }
+/* pixel grid, scanlines and dark rounded corners */
 html.crt body::after {
   content: ""; position: fixed; inset: 0; z-index: 300; pointer-events: none;
   background:
-    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%),
-    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.28) 2px 3px);
-  animation: crt-flicker .12s infinite alternate;
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.7) 100%),
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.35) 2px 3px),
+    repeating-linear-gradient(to right, transparent 0 2px, rgba(0,0,0,.18) 2px 3px);
+  box-shadow: inset 0 0 120px rgba(0,0,0,.8);
+  border-radius: 18px / 24px;
+  animation: crt-flicker .1s infinite alternate;
 }
-html.crt body { text-shadow: 0 0 3px rgba(120,255,140,.45); }
-@keyframes crt-flicker { from { opacity: .92; } to { opacity: 1; } }
+/* black bezel filling the corners outside the rounded tube (the spread shadow follows the curve) */
+html.crt::after {
+  content: ""; position: fixed; inset: 0; z-index: 302; pointer-events: none;
+  border-radius: 18px / 24px;
+  box-shadow: 0 0 0 40px #000;
+}
+/* bright band rolling down the screen */
+html.crt body::before {
+  content: ""; position: fixed; left: 0; right: 0; top: 0; height: 22vh; z-index: 301; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(180,255,190,.07) 45%, rgba(180,255,190,.12) 50%, rgba(180,255,190,.07) 55%, transparent);
+  animation: crt-roll 6s linear infinite;
+}
+@keyframes crt-flicker { from { opacity: .88; } to { opacity: 1; } }
+@keyframes crt-roll { from { transform: translateY(-25vh); } to { transform: translateY(105vh); } }
+
+/* power on / off: the picture opens from (or collapses to) a bright line */
+.crt-power { position: fixed; inset: 0; z-index: 500; pointer-events: none; background: #000; display: grid; place-items: center; animation: crt-power-bg .7s ease-out forwards; }
+.crt-power::after { content: ""; width: 100%; height: 3px; background: #dfffe4; box-shadow: 0 0 30px 8px #9effb0; animation: crt-power-line .7s ease-out forwards; }
+.crt-power.off { animation-direction: reverse; animation-timing-function: ease-in; }
+.crt-power.off::after { animation-direction: reverse; animation-timing-function: ease-in; }
+@keyframes crt-power-bg { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes crt-power-line { 0% { transform: scaleX(0); } 30% { transform: scaleX(1); height: 3px; } 60% { height: 100vh; opacity: .9; } 100% { height: 100vh; opacity: 0; } }
 
 .toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; align-items: center; gap: .3rem;
   padding: .9rem 1.4rem; background: #111722; border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.6);
@@ -202,7 +243,7 @@ html.crt body { text-shadow: 0 0 3px rgba(120,255,140,.45); }
 @media print {
   @page { size: A4; margin: 14mm 16mm; }
   html.crt { filter: none; }
-  html.crt body::after, .toast { display: none !important; }
+  html.crt::after, html.crt body::after, .toast { display: none !important; }
   :root { --fg: #111; --muted: #444; --accent: #157a4f; --accent2: #1d4ed8; --border: #ccc; --bg: #fff; --bg2: #fff; }
   html, body { background: #fff !important; color: #111; font-size: 10.5pt; line-height: 1.4; }
   * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }

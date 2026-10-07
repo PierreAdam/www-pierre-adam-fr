@@ -1,0 +1,40 @@
+/* Shared by every theme: recolour the parts of the site that use fixed colours
+   (terminal windows, header, prompt) from the theme's CSS variables.
+   Colour variables must be 6-digit hex: the background canvas reads them. */
+@media screen {
+  html[data-theme] .nav { background: color-mix(in srgb, var(--bg) 90%, transparent); }
+  html[data-theme] .term { background: var(--bg2); border-color: var(--border); }
+  html[data-theme] .term-bar { background: var(--border); border-color: var(--border); }
+  html[data-theme] .term-bar em { color: var(--fg); }
+  html[data-theme] .win-btns button { background: var(--bg); }
+  html[data-theme] .win-btns .win-close { background: var(--accent); }
+  html[data-theme] .win-btns svg { stroke: var(--fg); }
+  html[data-theme] .win-btns .win-close svg { stroke: var(--bg); }
+  html[data-theme] .prompt b,
+  html[data-theme] .neo-key,
+  html[data-theme] .t-ok { color: var(--accent); }
+  html[data-theme] .prompt i { color: var(--accent2); }
+  html[data-theme] .neo-logo { color: var(--accent2); }
+  html[data-theme] .game { background: var(--bg2); color: var(--muted); }
+  html[data-theme] .card,
+  html[data-theme] .chip { background: var(--bg2); }
+  html[data-theme] #console-out::-webkit-scrollbar-thumb { background: var(--border); border-color: var(--bg2); }
+  html[data-theme] ::selection { background: var(--accent); color: var(--bg); }
+
+  /* CRT mode on top of a theme: keep the theme's own colours (no green tint),
+     pixelate and jitter the page, and only a faint glow */
+  html.crt[data-theme] :is(.nav, main, footer, #bg) { filter: url(#crt) contrast(1.05); }
+  html.crt[data-theme] #console { filter: url(#crt-soft) contrast(1.05); }
+  /* thicker letter strokes survive the pixelation (it samples one pixel out of four) */
+  html.crt[data-theme] body { -webkit-text-stroke: .7px currentColor; text-shadow: 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent); }
+  html.crt[data-theme] #console,
+  html.crt[data-theme="win95"] section h3,
+  html.crt[data-theme="win95"] .hero::before { -webkit-text-stroke: 0; }
+  html.crt[data-theme] body::after { opacity: .55; animation: none; }
+  /* dark themes: outlined buttons, dark text on a bright button would be erased */
+  html.crt:is([data-theme="amber"], [data-theme="c64"]) .btn { background: transparent; color: var(--accent); border-width: 2px; }
+  /* light themes: each pixel block keeps its brightest colour, which would erase dark text.
+     Invert, pixelate, invert back: blocks keep the darkest colour instead, text stays bold */
+  html.crt[data-theme="win95"] :is(main, footer),
+  html.crt[data-theme="gameboy"] :is(.nav, main, footer) { filter: invert(1) url(#crt) invert(1) contrast(1.05); }
+}

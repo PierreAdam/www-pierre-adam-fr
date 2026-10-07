@@ -38,6 +38,18 @@ No framework and no build step: plain HTML, CSS and JavaScript, served by nginx 
 | `docker-compose.yml` | Copy of the stack running on the server |
 | `deploy.sh` | Build, push and deploy |
 
+## Optional plug-ins
+
+Extra console commands live in separate files that register themselves with `registerCommand()` (see `main.js`). Each one can be removed by deleting its file(s) and its `<script>` line at the bottom of `index.html`; nothing else depends on them.
+
+| File(s) | Commands |
+|---|---|
+| `themes.js`, `themes/` | `theme amber`, `gameboy`, `c64`, `win95`, `theme off` |
+| `modem.js` | `connect`: a 56k dial-up connection with a synthesized modem sound |
+| `extras.js` | `cowsay`, `bsod`, `lynx` (and a hidden one) |
+
+A single theme can be removed by deleting `themes/<name>.css` and its entry in `THEMES` in `themes.js`.
+
 ## Editing the content
 
 Everything visible on the site lives in [`data.js`](data.js):

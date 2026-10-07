@@ -246,16 +246,29 @@ function background() {
     nodes = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4 }));
   };
   addEventListener("resize", init);
-  addEventListener("mousemove", (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  // Convert the pointer to canvas pixels: they differ from page pixels when the page
+  // is zoomed (CRT mode), so map through the canvas' on-screen box
+  addEventListener("mousemove", (e) => {
+    const r = c.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) * c.width) / r.width;
+    mouse.y = ((e.clientY - r.top) * c.height) / r.height;
+  });
   init();
 
+  // colours come from the CSS variables, re-read now and then so themes apply
+  const rgbVar = (v) => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue(v).trim().replace("#", "");
+    return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
+  };
+  let colors, frame = 0;
   const draw = () => {
+    if (frame++ % 30 === 0) colors = { a: rgbVar("--accent"), b: rgbVar("--accent2") };
     ctx.clearRect(0, 0, w, h);
     for (const p of nodes) {
       if (!reduceMotion) { p.x += p.vx; p.y += p.vy; }
       if (p.x < 0 || p.x > w) p.vx *= -1;
       if (p.y < 0 || p.y > h) p.vy *= -1;
-      ctx.fillStyle = "#3ddc97";
+      ctx.fillStyle = `rgb(${colors.a})`;
       ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
     }
     for (let i = 0; i < nodes.length; i++) {
@@ -263,14 +276,37 @@ function background() {
       for (let j = i + 1; j < nodes.length; j++) {
         const b = nodes[j];
         const dist = Math.hypot(a.x - b.x, a.y - b.y);
-        if (dist < 120) { ctx.strokeStyle = `rgba(86,182,247,${(1 - dist / 120) * 0.35})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        if (dist < 120) { ctx.strokeStyle = `rgba(${colors.b},${(1 - dist / 120) * 0.35})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
       }
       const dm = Math.hypot(a.x - mouse.x, a.y - mouse.y);
-      if (dm < 180) { ctx.strokeStyle = `rgba(61,220,151,${(1 - dm / 180) * 0.8})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke(); }
+      if (dm < 180) { ctx.strokeStyle = `rgba(${colors.a},${(1 - dm / 180) * 0.8})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke(); }
     }
     if (!reduceMotion) requestAnimationFrame(draw);
   };
   draw();
+}
+
+/* ---------- extra console commands (plug-ins) ----------
+   Optional files (themes.js, modem.js, extras.js) call registerCommand() to add commands.
+   Deleting one of those files and its <script> tag in index.html removes its commands.
+   def = { help: { en, fr }, hidden?: true, run(args, api) } */
+const extraCommands = {};
+function registerCommand(name, def) {
+  extraCommands[name] = def;
+}
+
+// Send key presses only to `handler` (capture phase, so page shortcuts don't fire).
+// Returns a function that releases the keyboard.
+function captureKeys(handler) {
+  const h = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || /^F\d+$/.test(e.key)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    handler(e.key.length === 1 ? e.key.toLowerCase() : e.key, e);
+  };
+  // next tick, so the Enter that started the command is not caught
+  setTimeout(() => addEventListener("keydown", h, true), 0);
+  return () => removeEventListener("keydown", h, true);
 }
 
 /* ---------- easter-egg console (~ key) ---------- */
@@ -416,27 +452,48 @@ function consoleEgg() {
     return null;
   };
 
-  /* --- games: full-size screen over the terminal, back to the prompt on Esc --- */
-  let gameAbort = null; // set while a game runs, so closing the console can end it
-  const play = async (name) => {
+  // set while a command runs, so closing the console can stop it (games, plug-ins)
+  let runAbort = null;
+
+  /* --- full-size screen over the terminal (games, lynx, sl...) --- */
+  const fullscreen = async (run, className = "game") => {
     const wasMax = box.classList.contains("maximized");
     box.classList.add("maximized");
     const screen = document.createElement("pre");
-    screen.className = "game";
+    screen.className = className;
     box.append(screen);
-    gameAbort = new AbortController();
-    const score = await Games[name](screen, t().games, gameAbort.signal);
-    gameAbort = null;
-    screen.remove();
-    if (!wasMax) box.classList.remove("maximized");
+    try {
+      return await run(screen, runAbort?.signal);
+    } finally {
+      screen.remove();
+      if (!wasMax) box.classList.remove("maximized");
+    }
+  };
+  const play = async (name) => {
+    const score = await fullscreen((screen, signal) => Games[name](screen, t().games, signal));
     return t().games.result(name, score, Games.best(name));
+  };
+
+  // what plug-in commands get to work with
+  const api = {
+    print, printHTML, line, sleep, esc, fullscreen, captureKeys,
+    get lang() { return lang; },
+    get signal() { return runAbort?.signal; },
+  };
+  // command names shown in help / man / tab completion: built-ins, then visible plug-ins
+  const helpText = (n) => t().cmds[n] ?? extraCommands[n]?.help?.[lang] ?? extraCommands[n]?.help?.en;
+  const listed = () => {
+    const names = Object.keys(t().cmds);
+    const extras = Object.keys(extraCommands).filter((n) => !extraCommands[n].hidden && !names.includes(n));
+    names.splice(names.indexOf("lang"), 0, ...extras);
+    return names;
   };
 
   const cmds = {
     help: () => {
-      const names = Object.keys(t().cmds);
+      const names = listed();
       const width = Math.max(...names.map((n) => n.length)) + 3;
-      return [t().helpTitle, ...names.map((n) => `  ${n.padEnd(width)}${t().cmds[n]}`)].join("\n");
+      return [t().helpTitle, ...names.map((n) => `  ${n.padEnd(width)}${helpText(n)}`)].join("\n");
     },
     whoami: () => `${CV.common.name}, ${d().roles[0]}`,
     ls: () => Object.keys(files).join("  "),
@@ -448,6 +505,12 @@ function consoleEgg() {
     pay,
     matrix,
     hack,
+    crt: async ([arg]) => {
+      if (arg && !["on", "off"].includes(arg.toLowerCase())) return t().crtUsage;
+      const on = arg ? arg.toLowerCase() === "on" : !crtIsOn();
+      if (!(await setCrtMode(on))) return on ? t().crtAlreadyOn : t().crtAlreadyOff;
+      return on ? t().crtOn : t().crtOff;
+    },
     snake: () => play("snake"),
     tetris: () => play("tetris"),
     pwd: () => "/home/guest",
@@ -457,7 +520,7 @@ function consoleEgg() {
     history: () => history.map((h, i) => `${String(i + 1).padStart(4)}  ${h}`).join("\n"),
     man: ([c]) => {
       if (!c) return t().manUsage;
-      const desc = t().cmds[c];
+      const desc = listed().includes(c) && helpText(c);
       return desc ? `${c.toUpperCase()}(1)\n\nNAME\n    ${c} - ${desc}` : t().manNone(c);
     },
     lang: ([l]) => {
@@ -488,7 +551,7 @@ function consoleEgg() {
 
   const toggle = (show = box.classList.contains("hidden")) => {
     box.classList.toggle("hidden", !show);
-    if (!show) { input.blur(); gameAbort?.abort(); }
+    if (!show) { input.blur(); runAbort?.abort(); }
     if (show) { if (!out.textContent) print(t().welcome); input.focus(); }
   };
   box.querySelector(".win-close").onclick = () => toggle(false);
@@ -512,7 +575,7 @@ function consoleEgg() {
     if (e.key === "Tab") {
       e.preventDefault();
       const parts = input.value.trimStart().split(/\s+/);
-      const pool = parts.length > 1 ? Object.keys(files) : Object.keys(t().cmds);
+      const pool = parts.length > 1 ? Object.keys(files) : listed();
       const word = parts[parts.length - 1];
       const hits = pool.filter((n) => n.startsWith(word));
       if (hits.length === 1) {
@@ -539,15 +602,23 @@ function consoleEgg() {
     history.push(raw);
     hIndex = history.length;
     const [cmd, ...args] = raw.split(/\s+/);
-    const fn = cmds[cmd.toLowerCase()];
+    const name = cmd.toLowerCase();
+    const extra = Object.hasOwn(extraCommands, name) && extraCommands[name];
+    const fn = Object.hasOwn(cmds, name) ? cmds[name] : extra ? (a) => extra.run(a, api) : null;
+    runAbort = new AbortController();
     let res = fn ? fn(args) : t().notFound(cmd);
     if (res instanceof Promise) {
       // animated command: lock the prompt until it's done
       input.disabled = true;
-      res = await res;
+      try {
+        res = await res;
+      } catch (err) {
+        res = String(err?.message || err);
+      }
       input.disabled = false;
       if (!box.classList.contains("hidden")) input.focus();
     }
+    runAbort = null;
     if (res) print(res);
     scroll();
   });
@@ -555,17 +626,42 @@ function consoleEgg() {
 
 $$("[data-lang]").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 
-/* ---------- Konami code: retro CRT mode ---------- */
+/* ---------- retro CRT mode (Konami code or `crt` command) ---------- */
+// Switch CRT mode on/off with the old-TV power animation.
+// Resolves with true if the mode changed, false if it was already in that state.
+function setCrtMode(on) {
+  const root = document.documentElement;
+  if (on === root.classList.contains("crt")) return Promise.resolve(false);
+  // the zoom changes the page height: keep the reader at the same place
+  const apply = (value) => {
+    const ratio = scrollY / (root.scrollHeight - innerHeight || 1);
+    root.classList.toggle("crt", value);
+    scrollTo({ top: ratio * (root.scrollHeight - innerHeight), behavior: "instant" });
+  };
+  const power = document.createElement("div");
+  power.className = on ? "crt-power" : "crt-power off";
+  document.body.append(power);
+  // switch on behind the animation, or switch off once it's done
+  if (on) apply(true);
+  return new Promise((resolve) => setTimeout(() => {
+    if (!on) apply(false);
+    power.remove();
+    resolve(true);
+  }, reduceMotion ? 0 : 700));
+}
+const crtIsOn = () => document.documentElement.classList.contains("crt");
+
 function konami() {
   const code = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
   let pos = 0;
-  addEventListener("keydown", (e) => {
-    if (e.target.matches("input, textarea")) return;
+  addEventListener("keydown", async (e) => {
+    if (e.target.matches?.("input, textarea")) return;
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     pos = key === code[pos] ? pos + 1 : key === code[0] ? 1 : 0;
     if (pos < code.length) return;
     pos = 0;
-    const on = document.documentElement.classList.toggle("crt");
+    const on = !crtIsOn();
+    await setCrtMode(on);
     toast(on ? t().konamiOn : t().konamiOff);
   });
 }

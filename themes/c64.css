@@ -1,0 +1,32 @@
+/* Theme: Commodore 64 start-up screen (blue on blue, upper case, READY.) */
+@media screen {
+  html[data-theme="c64"] {
+    --bg: #40318d;
+    --bg2: #352879;
+    --fg: #7869c4;
+    --muted: #7869c4;
+    --accent: #bfb7ff;
+    --accent2: #a59fff;
+    --border: #7869c4;
+    --sans: var(--mono);
+  }
+  html[data-theme="c64"] body {
+    border: clamp(12px, 3vw, 36px) solid #7869c4;
+    min-height: 100vh;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  html[data-theme="c64"] .hero h1 { color: var(--accent); }
+  html[data-theme="c64"] main::before {
+    content: "\A    **** COMMODORE 64 BASIC V2 ****\A\A 64K RAM SYSTEM  38911 BASIC BYTES FREE\A\AREADY.";
+    display: block;
+    white-space: pre;
+    font-family: var(--mono);
+    padding-top: 1.5rem;
+    color: var(--fg);
+  }
+  html[data-theme="c64"] .card,
+  html[data-theme="c64"] .chip,
+  html[data-theme="c64"] .btn { border-radius: 0; }
+  html[data-theme="c64"] .caret { color: var(--fg); }
+}

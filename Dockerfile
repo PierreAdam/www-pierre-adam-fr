@@ -1,8 +1,9 @@
 # Static CV website served by nginx
 FROM nginx:1.27-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html style.css main.js data.js games.js favicon.svg favicon-180.png og-image.png /usr/share/nginx/html/
+# copy the whole site (.dockerignore keeps the project files out), then move the nginx config in place
+COPY . /usr/share/nginx/html/
+RUN mv /usr/share/nginx/html/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

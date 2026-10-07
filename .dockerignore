@@ -6,3 +6,6 @@ docker-compose*.yml
 deploy.sh
 assets-src
 README.md
+.git
+.gitignore
+*.py
