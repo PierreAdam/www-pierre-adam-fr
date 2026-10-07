@@ -226,6 +226,8 @@ const UI = {
     vim: "you're now stuck in vim forever. just kidding, there's no editor here. you're safe.",
     cd: "cd: there's only ~ here. it's a small place.",
     matrixEnd: "wake up, guest... the CV has you.",
+    konamiOn: "Konami code accepted. +30 lives. Retro CRT mode on.",
+    konamiOff: "Back to the future. CRT mode off.",
     games: {
       score: "score", best: "best", lines: "lines", level: "level", next: "next",
       over: "GAME OVER", paused: "PAUSED", again: "R: play again",
@@ -321,6 +323,8 @@ const UI = {
     vim: "vous voilà coincé dans vim pour toujours. je plaisante, il n'y a pas d'éditeur ici.",
     cd: "cd : il n'y a que ~ ici. c'est un petit logement.",
     matrixEnd: "réveille-toi, guest... le CV te tient.",
+    konamiOn: "Code Konami accepté. +30 vies. Mode écran cathodique activé.",
+    konamiOff: "Retour vers le futur. Mode cathodique désactivé.",
     games: {
       score: "score", best: "record", lines: "lignes", level: "niveau", next: "suivante",
       over: "PARTIE TERMINÉE", paused: "PAUSE", again: "R : rejouer",

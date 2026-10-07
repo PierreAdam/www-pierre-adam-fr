@@ -159,6 +159,25 @@ footer { text-align: center; padding: 4rem 1rem 2rem; font-size: .8rem; }
 .nav.open .nav-toggle span:nth-child(2) { opacity: 0; }
 .nav.open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
+/* Konami code: retro green-phosphor CRT mode */
+html.crt { filter: grayscale(1) sepia(1) hue-rotate(65deg) saturate(3.5) brightness(.95) contrast(1.1); }
+html.crt body::after {
+  content: ""; position: fixed; inset: 0; z-index: 300; pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%),
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.28) 2px 3px);
+  animation: crt-flicker .12s infinite alternate;
+}
+html.crt body { text-shadow: 0 0 3px rgba(120,255,140,.45); }
+@keyframes crt-flicker { from { opacity: .92; } to { opacity: 1; } }
+
+.toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  padding: .9rem 1.4rem; background: #111722; border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.6);
+  font-family: var(--mono); font-size: .9rem; color: var(--fg); text-align: center; animation: toast-in .3s ease-out; transition: opacity .6s, transform .6s; }
+.toast-keys { color: var(--accent); letter-spacing: .15em; font-size: .8rem; }
+.toast.out { opacity: 0; transform: translate(-50%, 10px); }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 20px); } }
+
 /* print-only elements */
 .print-only { display: none; }
 
@@ -182,6 +201,8 @@ footer { text-align: center; padding: 4rem 1rem 2rem; font-size: .8rem; }
 /* ---------- print: a clean, paper-friendly CV (Ctrl + P) ---------- */
 @media print {
   @page { size: A4; margin: 14mm 16mm; }
+  html.crt { filter: none; }
+  html.crt body::after, .toast { display: none !important; }
   :root { --fg: #111; --muted: #444; --accent: #157a4f; --accent2: #1d4ed8; --border: #ccc; --bg: #fff; --bg2: #fff; }
   html, body { background: #fff !important; color: #111; font-size: 10.5pt; line-height: 1.4; }
   * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }

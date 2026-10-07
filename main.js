@@ -485,11 +485,19 @@ function consoleEgg() {
 
   const toggle = (show = box.classList.contains("hidden")) => {
     box.classList.toggle("hidden", !show);
+    if (!show) input.blur();
     if (show) { if (!out.textContent) print(t().welcome); input.focus(); }
   };
   box.querySelector(".win-close").onclick = () => toggle(false);
   box.querySelector(".win-min").onclick = () => toggle(false);
   box.querySelector(".win-max").onclick = () => { box.classList.toggle("maximized"); input.focus(); };
+  // Clicking anywhere in the terminal puts the cursor back in the prompt,
+  // unless the click was the end of a text selection (so copy still works)
+  box.addEventListener("click", (e) => {
+    if (e.target.closest(".win-btns") || input.disabled) return;
+    if (getSelection().toString()) return;
+    input.focus({ preventScroll: true });
+  });
   addEventListener("keydown", (e) => {
     if ((["~", "`", "²"].includes(e.key) || e.code === "Backquote") && e.target !== input) { e.preventDefault(); toggle(); }
     if (e.key === "Escape") toggle(false);
@@ -544,6 +552,31 @@ function consoleEgg() {
 
 $$("[data-lang]").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 
+/* ---------- Konami code: retro CRT mode ---------- */
+function konami() {
+  const code = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+  let pos = 0;
+  addEventListener("keydown", (e) => {
+    if (e.target.matches("input, textarea")) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    pos = key === code[pos] ? pos + 1 : key === code[0] ? 1 : 0;
+    if (pos < code.length) return;
+    pos = 0;
+    const on = document.documentElement.classList.toggle("crt");
+    toast(on ? t().konamiOn : t().konamiOff);
+  });
+}
+
+function toast(text) {
+  $(".toast")?.remove();
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span class="toast-keys">▲ ▲ ▼ ▼ ◀ ▶ ◀ ▶ B A</span>${esc(text)}`;
+  document.body.append(el);
+  setTimeout(() => el.classList.add("out"), 3500);
+  setTimeout(() => el.remove(), 4200);
+}
+
 /* ---------- phone menu ---------- */
 const nav = $(".nav");
 const setMenu = (open) => {
@@ -560,3 +593,4 @@ typeRoles();
 reveal();
 background();
 consoleEgg();
+konami();
